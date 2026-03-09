@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,15 +22,20 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Gradle wrapper
+      - name: Make gradlew executable
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /tmp/gradle
-          /tmp/gradle/gradle-8.4/bin/gradle wrapper --gradle-version 8.4
+          cat > gradlew << 'GRADLEW'
+          #!/bin/sh
+          exec java -jar "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" "$@"
+          GRADLEW
+          chmod +x gradlew
+          curl -sL https://github.com/gradle/gradle/releases/download/v8.4.0/gradle-8.4-bin.zip -o /tmp/g.zip
+          unzip -q /tmp/g.zip -d /tmp/g
+          /tmp/g/gradle-8.4/bin/gradle wrapper --project-dir . --gradle-version 8.4
           chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build APK
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
